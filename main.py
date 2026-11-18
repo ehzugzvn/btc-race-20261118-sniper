@@ -36,7 +36,7 @@ SYMBOL = "CBBTC"
 # --- Strategy parameters (basis points unless noted) ---
 MEAN_N = 60            # bars in the short mean the dip is measured against
 EMA_N = 240            # bars in the trend-guard EMA
-DIP_BPS = 120          # buy only this far below mean60
+DIP_BPS = 100          # buy only this far below mean60 (tuned: best of 100/120/150 on the dev grade)
 COLLAPSE_BPS = 300     # never buy further than this below EMA240
 TRAIL_ARM_BPS = 80     # trailing stop arms once the gain reaches this
 TRAIL_GIVE_BPS = 40    # ...and fires this far below the highest close
