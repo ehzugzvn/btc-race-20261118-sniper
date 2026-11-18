@@ -7,7 +7,9 @@ slippage and impact, so entries demand a dip far larger than that.
 
 Rules (all decisions on a bar's close, fills at the next bar's open):
   - Mean: mean of the last 60 closes. Trend guard: EMA of the last 240
-    closes (seeded with the mean of the first 240, then 2/(240+1) steps).
+    closes, kept as a streaming EMA (step 2/(240+1) toward each new close,
+    initialised at the first close seen, so the guard is live from the
+    start of the window and converges to the 240-bar EMA).
   - BUY, only when flat: close <= mean60 * (1 - DIP_BPS) and the minimum
     close of the last 3 bars is >= the minimum close of the 3 bars before
     them (stabilization: sellers are exhausting) and close >= EMA240 *
@@ -46,20 +48,17 @@ BPS = 10_000
 
 # --- Rolling indicator state (this bot trades one symbol) ---
 _closes = []           # every CBBTC close seen, oldest first (ints)
-_ema240 = None         # EMA240 value once seeded, else None
-_ema_warm = []         # closes collected while seeding EMA240
+_ema240 = None         # streaming EMA240, initialised at the first close
 
 
 def _push_close(close):
     """Fold one new close into the rolling mean window and the EMA240."""
     global _ema240
     _closes.append(close)
-    if _ema240 is not None:
-        _ema240 += (2.0 / (EMA_N + 1)) * (close - _ema240)
+    if _ema240 is None:
+        _ema240 = float(close)
     else:
-        _ema_warm.append(close)
-        if len(_ema_warm) == EMA_N:
-            _ema240 = sum(_ema_warm) / EMA_N
+        _ema240 += (2.0 / (EMA_N + 1)) * (close - _ema240)
 
 
 def _mean60():
